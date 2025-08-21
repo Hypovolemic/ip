@@ -1,10 +1,10 @@
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class FengWei {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Task[] taskList = new Task[100];
-        int taskListIndex = 0;
+        ArrayList<Task> taskList = new ArrayList<>();
 
         System.out.println("_____________________________________________________");
         System.out.println("Hello! I'm FengWei");
@@ -13,7 +13,7 @@ public class FengWei {
 
         // Exits the programme when the user types the command bye
         while (true) {
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
             if (input.equals("bye")) {
                 break;
             }
@@ -22,9 +22,8 @@ public class FengWei {
             if (input.equals("list")) {
                 System.out.println("_____________________________________________________");
                 System.out.println("Here are the tasks in your list:");
-                for (int i = 0; i < taskListIndex; i++) {
-                    Task task = taskList[i];
-                    System.out.println((i + 1) + "." + task.toString());
+                for (int i = 0; i < taskList.size(); i++) {
+                    System.out.println((i + 1) + "." + taskList.get(i));
                 }
                 System.out.println("_____________________________________________________");
                 // Finish the command
@@ -59,11 +58,11 @@ public class FengWei {
                 }
 
                 int taskNumber  = Integer.parseInt(taskMarks[1]) - 1;
-                taskList[taskNumber].markAsDone();
+                taskList.get(taskNumber).markAsDone();
 
                 System.out.println("_____________________________________________________");
                 System.out.println("Nice! I've marked this task as done:");
-                System.out.println("    " + taskList[taskNumber].toString());
+                System.out.println("    " + taskList.get(taskNumber));
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -72,11 +71,11 @@ public class FengWei {
             if (input.startsWith("unmark")) {
                 String[] taskMarks = input.split(" ");
                 int taskNumber  = Integer.parseInt(taskMarks[1]) - 1;
-                taskList[taskNumber].markAsNotDone();
+                taskList.get(taskNumber).markAsNotDone();
 
                 System.out.println("_____________________________________________________");
                 System.out.println("OK, I've marked this task as not done yet:");
-                System.out.println("    " + taskList[taskNumber].toString());
+                System.out.println("    " + taskList.get(taskNumber));
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -84,11 +83,11 @@ public class FengWei {
             if (input.startsWith("todo")) {
                 String description = input.substring(5);
                 Task t = new TodoTask(description);
-                taskList[taskListIndex++] = t;
+                taskList.add(t);
                 System.out.println("_____________________________________________________");
                 System.out.println("Got it. I've added this task:");
                 System.out.println("  " + t);
-                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -98,11 +97,11 @@ public class FengWei {
                 String description = parts[0].substring(9);
                 String by = parts[1];
                 Task d = new DeadlineTask(description, by);
-                taskList[taskListIndex++] = d;
+                taskList.add(d);
                 System.out.println("_____________________________________________________");
                 System.out.println("Got it. I've added this task:");
                 System.out.println("  " + d);
-                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -114,12 +113,24 @@ public class FengWei {
                 String to = parts[2];
 
                 Task e = new EventTask(description, from, to);
-                taskList[taskListIndex++] = e;
+                taskList.add(e);
 
                 System.out.println("_____________________________________________________");
                 System.out.println("Got it. I've added this task:");
                 System.out.println("  " + e);
-                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
+                System.out.println("_____________________________________________________");
+                continue;
+            }
+
+            if (input.startsWith("delete")) {
+                String[] parts = input.split(" ");
+                int taskNumber = Integer.parseInt(parts[1]) - 1;
+                Task removedTask = taskList.remove(taskNumber);
+                System.out.println("_____________________________________________________");
+                System.out.println("Noted. I've removed this task:");
+                System.out.println(" " + removedTask);
+                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -132,8 +143,8 @@ public class FengWei {
 
             // Since the input is not the list command, add task to task list
             // Assign input to array
-            taskList[taskListIndex] = new Task(input, ' ');
-            taskListIndex++;
+            Task normal = new Task(input, ' ');
+            taskList.add(normal);
 
             // Echo added task
             System.out.println("_____________________________________________________");
