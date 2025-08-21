@@ -34,6 +34,30 @@ public class FengWei {
             // Mark task as done if user types "mark" followed by task number
             if (input.startsWith("mark")) {
                 String[] taskMarks = input.split(" ");
+                try {
+                    if (taskMarks.length < 2) {
+                        throw new FengWeiException("Please specify the task number to mark.");
+                    }
+                    // rest of the code
+                } catch (FengWeiException e) {
+                    System.out.println("_____________________________________________________");
+                    System.out.println(" OOPS!!! " + e.getMessage());
+                    System.out.println("_____________________________________________________");
+                    continue;
+                }
+
+                try {
+                    if (taskMarks.length > 2) {
+                        throw new FengWeiException("Too many arguments");
+                    }
+                    // rest of the code
+                } catch (FengWeiException e) {
+                    System.out.println("_____________________________________________________");
+                    System.out.println(" OOPS!!! " + e.getMessage());
+                    System.out.println("_____________________________________________________");
+                    continue;
+                }
+
                 int taskNumber  = Integer.parseInt(taskMarks[1]) - 1;
                 taskList[taskNumber].markAsDone();
 
