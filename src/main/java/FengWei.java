@@ -21,9 +21,10 @@ public class FengWei {
             // Checks if user types "list"
             if (input.equals("list")) {
                 System.out.println("_____________________________________________________");
+                System.out.println("Here are the tasks in your list:");
                 for (int i = 0; i < taskListIndex; i++) {
                     Task task = taskList[i];
-                    System.out.println((i + 1) + ". [" + task.getStatusIcon() + "] " + task.getDescription());
+                    System.out.println((i + 1) + "." + task.toString());
                 }
                 System.out.println("_____________________________________________________");
                 // Finish the command
@@ -38,8 +39,7 @@ public class FengWei {
 
                 System.out.println("_____________________________________________________");
                 System.out.println("Nice! I've marked this task as done:");
-                System.out.println("    [" + taskList[taskNumber].getStatusIcon() + "] "
-                        + taskList[taskNumber].getDescription());
+                System.out.println("    " + taskList[taskNumber].toString());
                 System.out.println("_____________________________________________________");
                 continue;
             }
@@ -52,14 +52,63 @@ public class FengWei {
 
                 System.out.println("_____________________________________________________");
                 System.out.println("OK, I've marked this task as not done yet:");
-                System.out.println("    [" + taskList[taskNumber].getStatusIcon() + "] "
-                        + taskList[taskNumber].getDescription());
+                System.out.println("    " + taskList[taskNumber].toString());
                 System.out.println("_____________________________________________________");
                 continue;
             }
+
+            if (input.startsWith("todo")) {
+                String description = input.substring(5);
+                Task t = new TodoTask(description);
+                taskList[taskListIndex++] = t;
+                System.out.println("_____________________________________________________");
+                System.out.println("Got it. I've added this task:");
+                System.out.println("  " + t);
+                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("_____________________________________________________");
+                continue;
+            }
+
+            if (input.startsWith("deadline")) {
+                String[] parts = input.split(" /by ");
+                String description = parts[0].substring(9);
+                String by = parts[1];
+                Task d = new DeadlineTask(description, by);
+                taskList[taskListIndex++] = d;
+                System.out.println("_____________________________________________________");
+                System.out.println("Got it. I've added this task:");
+                System.out.println("  " + d);
+                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("_____________________________________________________");
+                continue;
+            }
+
+            if (input.startsWith("event")) {
+                String[] parts = input.split(" /from | /to ");
+                String description = parts[0].substring(6); // remove "event "
+                String from = parts[1];
+                String to = parts[2];
+
+                Task e = new EventTask(description, from, to);
+                taskList[taskListIndex++] = e;
+
+                System.out.println("_____________________________________________________");
+                System.out.println("Got it. I've added this task:");
+                System.out.println("  " + e);
+                System.out.println("Now you have " + taskListIndex + " tasks in the list.");
+                System.out.println("_____________________________________________________");
+                continue;
+            }
+
+            // Handle unknown commands
+            System.out.println("_____________________________________________________");
+            System.out.println("Invalid command!");
+            System.out.println("_____________________________________________________");
+
+
             // Since the input is not the list command, add task to task list
             // Assign input to array
-            taskList[taskListIndex] = new Task(input);
+            taskList[taskListIndex] = new Task(input, ' ');
             taskListIndex++;
 
             // Echo added task
