@@ -1,10 +1,11 @@
+import java.util.List;
 import java.util.Scanner;
-import java.util.ArrayList;
 
 public class FengWei {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        ArrayList<Task> taskList = new ArrayList<>();
+        TasksStorage storage = TasksStorage.getInstance();
+        List<Task> taskList = storage.loadTasks(); // Load tasks at startup
 
         System.out.println("_____________________________________________________");
         System.out.println("Hello! I'm FengWei");
@@ -64,6 +65,7 @@ public class FengWei {
                 System.out.println("Nice! I've marked this task as done:");
                 System.out.println("    " + taskList.get(taskNumber));
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -77,6 +79,7 @@ public class FengWei {
                 System.out.println("OK, I've marked this task as not done yet:");
                 System.out.println("    " + taskList.get(taskNumber));
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -89,6 +92,7 @@ public class FengWei {
                 System.out.println("  " + t);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -103,6 +107,7 @@ public class FengWei {
                 System.out.println("  " + d);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -120,6 +125,7 @@ public class FengWei {
                 System.out.println("  " + e);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -132,6 +138,7 @@ public class FengWei {
                 System.out.println(" " + removedTask);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             }
 
@@ -145,6 +152,7 @@ public class FengWei {
             // Assign input to array
             Task normal = new Task(input, ' ');
             taskList.add(normal);
+            storage.saveTasks(taskList); // Save tasks after each modification
 
             // Echo added task
             System.out.println("_____________________________________________________");
