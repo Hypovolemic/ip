@@ -1,10 +1,11 @@
+import java.util.List;
 import java.util.Scanner;
-import java.util.ArrayList;
 
 public class FengWei {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        ArrayList<Task> taskList = new ArrayList<>();
+        TasksStorage storage = TasksStorage.getInstance();
+        List<Task> taskList = storage.loadTasks(); // Load tasks at startup
 
         System.out.println("_____________________________________________________");
         System.out.println("Hello! I'm FengWei");
@@ -85,8 +86,7 @@ public class FengWei {
                     System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                     System.out.println("_____________________________________________________");
                     continue;
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     System.out.println("_____________________________________________________");
                     System.out.println("Invalid event command format!");
                     System.out.println("_____________________________________________________");
@@ -130,11 +130,12 @@ public class FengWei {
                 String[] taskUnmarks = input.split(" ");
                 int unmarkNumber = Integer.parseInt(taskUnmarks[1]) - 1;
                 taskList.get(unmarkNumber).markAsNotDone();
-
+                storage.saveTasks(taskList);
                 System.out.println("_____________________________________________________");
                 System.out.println("OK, I've marked this task as not done yet:");
                 System.out.println("    " + taskList.get(unmarkNumber));
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             case "delete":
                 String[] parts = input.split(" ");
@@ -145,6 +146,7 @@ public class FengWei {
                 System.out.println(" " + removedTask);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 System.out.println("_____________________________________________________");
+                storage.saveTasks(taskList);
                 continue;
             default:
                 // Existing fallback code and exceptions
