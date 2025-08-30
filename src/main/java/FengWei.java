@@ -22,15 +22,14 @@ public class FengWei {
 
         while (true) {
             String input = ui.readCommand();
-            String[] inputParts = input.split(" ");
+            String command = Parser.getCommand(input);
+            String arguments = Parser.getArguments(input);
 
-            if (inputParts.length == 0) {
+            if (command.isEmpty()) {
                 ui.showLine();
                 ui.showError("Invalid command!");
                 continue;
             }
-
-            String command = inputParts[0];
 
             if (command.equals("bye")) {
                 break;
@@ -46,8 +45,7 @@ public class FengWei {
                 ui.showLine();
                 continue;
             case "todo":
-                String description = input.substring(5);
-                Task t = new TodoTask(description);
+                Task t = new TodoTask(arguments);
                 taskList.add(t);
                 ui.showLine();
                 System.out.println("Got it. I've added this task:");
@@ -57,7 +55,7 @@ public class FengWei {
                 continue;
             case "deadline":
                 try {
-                    String[] parts = input.split(" /by ", 2);
+                    String[] parts = arguments.split(" /by ", 2);
                     if (parts.length < 2) {
                         ui.showLine();
                         ui.showError("The deadline command must be in the format: deadline <description> /by <time>");
@@ -82,7 +80,7 @@ public class FengWei {
                 continue;
             case "event":
                 try {
-                    String[] eventParts = input.split(" /from | /to ");
+                    String[] eventParts = arguments.split(" /from | /to ");
                     if (eventParts.length < 3) {
                         ui.showLine();
                         ui.showError("The event command must be in the format: event <description> /from <start> /to <end>");
@@ -110,7 +108,7 @@ public class FengWei {
                 }
                 continue;
             case "mark":
-                String[] taskMarks = input.split(" ");
+                String[] taskMarks = arguments.split(" ");
                 try {
                     if (taskMarks.length < 2) {
                         throw new FengWeiException("Please specify the task number to mark.");
@@ -140,7 +138,7 @@ public class FengWei {
                 ui.showLine();
                 break;
             case "unmark":
-                String[] taskUnmarks = input.split(" ");
+                String[] taskUnmarks = arguments.split(" ");
                 int unmarkNumber = Integer.parseInt(taskUnmarks[1]) - 1;
                 taskList.get(unmarkNumber).markAsNotDone();
                 storage.saveTasks(taskList);
@@ -151,7 +149,7 @@ public class FengWei {
                 storage.saveTasks(taskList);
                 continue;
             case "delete":
-                String[] parts = input.split(" ");
+                String[] parts = arguments.split(" ");
                 int deleteNumber = Integer.parseInt(parts[1]) - 1;
                 Task removedTask = taskList.remove(deleteNumber);
                 ui.showLine();
