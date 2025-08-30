@@ -5,6 +5,8 @@ import java.util.List;
 
 public class FengWei {
     private final Ui ui;
+    private TasksStorage storage = TasksStorage.getInstance();
+    private TaskList taskList = new TaskList(storage.loadTasks());
 
     public FengWei() {
         this.ui = new Ui();
@@ -15,9 +17,6 @@ public class FengWei {
     }
 
     public void run() {
-        TasksStorage storage = TasksStorage.getInstance();
-        List<Task> taskList = storage.loadTasks();
-
         ui.showWelcome();
 
         while (true) {
@@ -130,7 +129,7 @@ public class FengWei {
                 }
 
                 int markNumber = Integer.parseInt(taskMarks[1]) - 1;
-                taskList.get(markNumber).markAsDone();
+                taskList.markAsDone(markNumber);
 
                 ui.showLine();
                 System.out.println("Nice! I've marked this task as done:");
@@ -140,13 +139,13 @@ public class FengWei {
             case "unmark":
                 String[] taskUnmarks = arguments.split(" ");
                 int unmarkNumber = Integer.parseInt(taskUnmarks[1]) - 1;
-                taskList.get(unmarkNumber).markAsNotDone();
-                storage.saveTasks(taskList);
+                taskList.markAsNotDone(unmarkNumber);
+                storage.saveTasks(taskList.getAll());
                 ui.showLine();
                 System.out.println("OK, I've marked this task as not done yet:");
                 System.out.println("    " + taskList.get(unmarkNumber));
                 ui.showLine();
-                storage.saveTasks(taskList);
+                storage.saveTasks(taskList.getAll());
                 continue;
             case "delete":
                 String[] parts = arguments.split(" ");
@@ -157,7 +156,7 @@ public class FengWei {
                 System.out.println(" " + removedTask);
                 System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                 ui.showLine();
-                storage.saveTasks(taskList);
+                storage.saveTasks(taskList.getAll());
                 continue;
             default:
                 ui.showLine();
