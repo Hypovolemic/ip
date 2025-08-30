@@ -1,8 +1,11 @@
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
 public class FengWei {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FengWeiException {
         Scanner scanner = new Scanner(System.in);
         TasksStorage storage = TasksStorage.getInstance();
         List<Task> taskList = storage.loadTasks(); // Load tasks at startup
@@ -52,17 +55,26 @@ public class FengWei {
                 continue;
             case "deadline":
                 try {
-                    String[] parts = inputParts[1].split(" /by ");
-                    String deadlineDesc = parts[0].substring(9);
-                    String by = parts[1];
-                    Task d = new DeadlineTask(deadlineDesc, by);
+                    String[] parts = input.split(" /by ", 2);
+                    if (parts.length < 2) {
+                        System.out.println("_____________________________________________________");
+                        System.out.println(" OOPS!!! The deadline command must be in the format: deadline <description> /by <time>");
+                        System.out.println("_____________________________________________________");
+                        continue;
+                    }
+                    String deadlineDesc = parts[0].substring(9).trim();
+                    String by = parts[1].trim();
+                    Task d = new DeadlineTask(deadlineDesc, by); // If parsing date, handle inside DeadlineTask
                     taskList.add(d);
                     System.out.println("_____________________________________________________");
                     System.out.println("Got it. I've added this task:");
                     System.out.println("  " + d);
                     System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                     System.out.println("_____________________________________________________");
-                    continue;
+                } catch (DateTimeParseException e) {
+                    System.out.println("_____________________________________________________");
+                    System.out.println("The deadline time format is invalid, use YYYY-MM-DD HHMM or a valid date");
+                    System.out.println("_____________________________________________________");
                 } catch (Exception e) {
                     System.out.println("_____________________________________________________");
                     System.out.println("Invalid deadline command format!");
@@ -71,21 +83,31 @@ public class FengWei {
                 continue;
             case "event":
                 try {
-                    // Example: event project meeting /from Aug 6th 2pm /to Aug 6th 4pm
                     String[] eventParts = input.split(" /from | /to ");
-                    String eventDesc = eventParts[0].substring(6); // remove "event "
-                    String from = eventParts[1];
-                    String to = eventParts[2];
-
-                    Task e = new EventTask(eventDesc, from, to);
+                    if (eventParts.length < 3) {
+                        System.out.println("_____________________________________________________");
+                        System.out.println(" OOPS!!! The event command must be in the format: event " +
+                                "<description> /from <start> /to <end>");
+                        System.out.println("_____________________________________________________");
+                        continue;
+                    }
+                    String eventDesc = eventParts[0].substring(6).trim();
+                    String from = eventParts[1].trim();
+                    String to = eventParts[2].trim();
+                    DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+                    LocalDateTime fromDateTime = LocalDateTime.parse(from, inputFormat);
+                    LocalDateTime toDateTime = LocalDateTime.parse(to, inputFormat);
+                    Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
                     taskList.add(e);
-
                     System.out.println("_____________________________________________________");
                     System.out.println("Got it. I've added this task:");
                     System.out.println("  " + e);
                     System.out.println("Now you have " + taskList.size() + " tasks in the list.");
                     System.out.println("_____________________________________________________");
-                    continue;
+                } catch (DateTimeParseException e) {
+                    System.out.println("_____________________________________________________");
+                    System.out.println("The event time format is invalid, use YYYY-MM-DD HHMM or a valid date");
+                    System.out.println("_____________________________________________________");
                 } catch (Exception e) {
                     System.out.println("_____________________________________________________");
                     System.out.println("Invalid event command format!");

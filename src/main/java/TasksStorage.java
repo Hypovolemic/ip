@@ -2,6 +2,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -56,8 +59,15 @@ public class TasksStorage {
                         }
                         String from = parts[3];
                         String to = parts[4];
-                        task = new EventTask(description, from, to);
-                        break;
+                        try {
+                            DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+                            LocalDateTime fromDateTime = LocalDateTime.parse(from, inputFormat);
+                            LocalDateTime toDateTime = LocalDateTime.parse(to, inputFormat);
+                            task = new EventTask(description, fromDateTime, toDateTime);
+                        } catch (DateTimeParseException e) {
+                            System.out.println("Invalid date format in event task: " + line);
+                            continue;
+                        }
                     default:
                         continue; // Skip unknown task types
                 }
@@ -84,7 +94,7 @@ public class TasksStorage {
             line.append(task.toString().substring(7)); // Skip the "[T][ ] " part
 
             if (task instanceof DeadlineTask) {
-                line.append(" | ").append(((DeadlineTask) task).getBy());
+                line.append(" | ").append(((DeadlineTask) task).formatBy());
             } else if (task instanceof EventTask) {
                 line.append(" | ").append(((EventTask) task).getFrom());
                 line.append(" | ").append(((EventTask) task).getTo());
