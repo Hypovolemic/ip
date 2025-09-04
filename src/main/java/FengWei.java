@@ -52,6 +52,15 @@ public class FengWei {
                 }
                 ui.showLine();
                 continue;
+            case "find":
+                ui.showLine();
+                System.out.println("Here are the matching tasks in your list:");
+                var found = taskList.findTasks(arguments);
+                for (int i = 0; i < found.size(); i++) {
+                    System.out.println((i + 1) + "." + found.get(i));
+                }
+                ui.showLine();
+                continue;
             case "todo":
                 Task t = new TodoTask(arguments);
                 taskList.add(t);
@@ -69,7 +78,7 @@ public class FengWei {
                         ui.showError("The deadline command must be in the format: deadline <description> /by <time>");
                         continue;
                     }
-                    String deadlineDesc = parts[0].substring(9).trim();
+                    String deadlineDesc = parts[0].trim();
                     String by = parts[1].trim();
                     Task d = new DeadlineTask(deadlineDesc, by);
                     taskList.add(d);
