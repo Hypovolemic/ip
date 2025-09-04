@@ -5,9 +5,9 @@ package tasks;
  * Serves as the superclass for specific task types.
  */
 public class Task {
-    private String description;
+    private final String description;
     private boolean isDone;
-    private char taskChar;
+    private final char taskChar;
 
     /**
      * Constructor for a Task object.

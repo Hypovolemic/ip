@@ -7,10 +7,10 @@ import java.time.format.DateTimeFormatter;
  * Represents a task that needs to be completed by a specific deadline.
  */
 public class EventTask extends Task {
-    private LocalDateTime from;
-    private LocalDateTime to;
     private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
     private static final DateTimeFormatter OUTPUT_FORMAT = DateTimeFormatter.ofPattern("MMM d yyyy, HH:mm");
+    private final LocalDateTime from;
+    private final LocalDateTime to;
 
     /**
      * Constructs an EventTask with the given description, start time, and end time.
