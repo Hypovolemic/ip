@@ -1,10 +1,20 @@
 package tasks;
 
+/**
+ * Represents a generic task with a description and type.
+ * Serves as the superclass for specific task types.
+ */
 public class Task {
     private String description;
     private boolean isDone;
     private char taskChar;
 
+    /**
+     * Constructor for a Task object.
+     * @param description The description of the task.
+     * @param taskChar    A character representing the type of task
+     *                    (e.g., 'T' for Todo, 'D' for Deadline, 'E' for Event).
+     */
     public Task(String description, char taskChar) {
         this.description = description;
         this.isDone = false;
