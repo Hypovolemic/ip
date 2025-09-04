@@ -15,6 +15,14 @@ public class Task {
         return (this.isDone ? "X" : " "); // mark done task with X
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public char getType() {
+        return taskChar;
+    }
+
     // removed getDescription method and implemented toString method
     @Override
     public String toString() {
