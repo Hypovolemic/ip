@@ -15,6 +15,9 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Singleton class to manage loading and saving tasks to a text file.
+ */
 public class TasksStorage {
     private static final Path DATA_DIRECTORY = Paths.get("data");
     private final Path TASKS_FILE_PATH = Paths.get(DATA_DIRECTORY.toString(), "Tasks.txt");

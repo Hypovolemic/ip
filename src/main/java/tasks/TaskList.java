@@ -3,6 +3,9 @@ package tasks;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Manages a list of tasks and provides operations to modify the list.
+ */
 public class TaskList {
     private final List<Task> tasks;
 
