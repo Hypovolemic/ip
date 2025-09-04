@@ -1,9 +1,9 @@
 package tasks;
 
 public class Task {
-    private String description;
+    private final String description;
     private boolean isDone;
-    private char taskChar;
+    private final char taskChar;
 
     public Task(String description, char taskChar) {
         this.description = description;
