@@ -22,6 +22,7 @@ public class FengWei {
     }
 
     public static void main(String[] args) {
+
         new FengWei().run();
     }
 
