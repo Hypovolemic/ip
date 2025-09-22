@@ -18,14 +18,51 @@ import ui.Ui;
  * Utility class for parsing user input commands and their arguments.
  */
 public class Parser {
+    // Command constants
+    private static final String COMMAND_LIST = "list";
+    private static final String COMMAND_FIND = "find";
+    private static final String COMMAND_TODO = "todo";
+    private static final String COMMAND_DEADLINE = "deadline";
+    private static final String COMMAND_EVENT = "event";
+    private static final String COMMAND_MARK = "mark";
+    private static final String COMMAND_UNMARK = "unmark";
+    private static final String COMMAND_DELETE = "delete";
+    private static final String COMMAND_BYE = "bye";
+
+    // Split limits
+    private static final int COMMAND_SPLIT_LIMIT = 2;
+
+    // Date format constants
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HHmm";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
+
+    // Error messages
+    private static final String ERROR_INVALID_COMMAND = "OOPS!!! Invalid command!";
+    private static final String ERROR_EMPTY_TODO = "OOPS!!! The description of a todo cannot be empty.";
+    private static final String ERROR_DEADLINE_FORMAT = "OOPS!!! The deadline command must be in the format: deadline <description> /by <time>";
+    private static final String ERROR_EVENT_FORMAT = "OOPS!!! The event command must be in the format: event <description> /from <start> /to <end>";
+    private static final String ERROR_EMPTY_DEADLINE = "OOPS!!! The description of a deadline cannot be empty.";
+    private static final String ERROR_EMPTY_EVENT = "OOPS!!! The description of an event cannot be empty.";
+    private static final String ERROR_INVALID_DATE = "OOPS!!! The date format is invalid, use YYYY-MM-DD HHMM";
+    private static final String ERROR_SPECIFY_TASK_NUMBER = "OOPS!!! Please specify the task number";
+    private static final String ERROR_SINGLE_TASK_NUMBER = "OOPS!!! Please specify only one task number";
+    private static final String ERROR_INVALID_TASK_NUMBER = "OOPS!!! Please enter a valid task number!";
+
+    // Delimiter constants
+    private static final String DEADLINE_DELIMITER = " /by ";
+    private static final String EVENT_DELIMITER_PATTERN = " /from | /to ";
+
     /**
      * Extracts the command word from user input.
      * @param input the full user input string
      * @return the command word
      */
     public static String getCommand(String input) {
-        String[] parts = input.trim().split(" ", 2);
-        return parts[0];
+        if (input == null || input.trim().isEmpty()) {
+            return "";
+        }
+        String[] parts = input.trim().split(" ", COMMAND_SPLIT_LIMIT);
+        return parts[0].toLowerCase();
     }
 
     /**
@@ -34,7 +71,10 @@ public class Parser {
      * @return the arguments part of the input
      */
     public static String getArguments(String input) {
-        String[] parts = input.trim().split(" ", 2);
+        if (input == null || input.trim().isEmpty()) {
+            return "";
+        }
+        String[] parts = input.trim().split(" ", COMMAND_SPLIT_LIMIT);
         return parts.length > 1 ? parts[1] : "";
     }
 
@@ -49,28 +89,28 @@ public class Parser {
     public static void executeCommand(String command, String arguments, TaskList taskList,
                                     TasksStorage storage, Ui ui) {
         switch (command) {
-        case "list":
+        case COMMAND_LIST:
             handleListCommand(taskList, ui);
             break;
-        case "find":
+        case COMMAND_FIND:
             handleFindCommand(arguments, taskList, ui);
             break;
-        case "todo":
+        case COMMAND_TODO:
             handleTodoCommand(arguments, taskList, ui, storage);
             break;
-        case "deadline":
+        case COMMAND_DEADLINE:
             handleDeadlineCommand(arguments, taskList, ui, storage);
             break;
-        case "event":
+        case COMMAND_EVENT:
             handleEventCommand(arguments, taskList, ui, storage);
             break;
-        case "mark":
+        case COMMAND_MARK:
             handleMarkCommand(arguments, taskList, storage, ui);
             break;
-        case "unmark":
+        case COMMAND_UNMARK:
             handleUnmarkCommand(arguments, taskList, storage, ui);
             break;
-        case "delete":
+        case COMMAND_DELETE:
             handleDeleteCommand(arguments, taskList, storage, ui);
             break;
         default:
@@ -96,9 +136,9 @@ public class Parser {
 
     private static void handleDeadlineCommand(String arguments, TaskList taskList, Ui ui, TasksStorage storage) {
         try {
-            String[] parts = arguments.split(" /by ", 2);
+            String[] parts = arguments.split(DEADLINE_DELIMITER, 2);
             if (parts.length < 2) {
-                ui.showError("The deadline command must be in the format: deadline <description> /by <time>");
+                ui.showError(ERROR_DEADLINE_FORMAT);
                 return;
             }
             String deadlineDesc = parts[0].trim();
@@ -108,7 +148,7 @@ public class Parser {
             storage.saveTasks(taskList.getAll());
             ui.showTaskAdded(d, taskList.size());
         } catch (DateTimeParseException e) {
-            ui.showError("The deadline time format is invalid, use YYYY-MM-DD HHMM or a valid date");
+            ui.showError(ERROR_INVALID_DATE);
         } catch (Exception e) {
             ui.showError("Invalid deadline command format!");
         }
@@ -116,23 +156,22 @@ public class Parser {
 
     private static void handleEventCommand(String arguments, TaskList taskList, Ui ui, TasksStorage storage) {
         try {
-            String[] eventParts = arguments.split(" /from | /to ");
+            String[] eventParts = arguments.split(EVENT_DELIMITER_PATTERN);
             if (eventParts.length < 3) {
-                ui.showError("The event command must be in the format: event <description> /from <start> /to <end>");
+                ui.showError(ERROR_EVENT_FORMAT);
                 return;
             }
             String eventDesc = eventParts[0].trim();
             String from = eventParts[1].trim();
             String to = eventParts[2].trim();
-            DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-            LocalDateTime fromDateTime = LocalDateTime.parse(from, inputFormat);
-            LocalDateTime toDateTime = LocalDateTime.parse(to, inputFormat);
+            LocalDateTime fromDateTime = LocalDateTime.parse(from, DATE_TIME_FORMATTER);
+            LocalDateTime toDateTime = LocalDateTime.parse(to, DATE_TIME_FORMATTER);
             Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
             taskList.add(e);
             storage.saveTasks(taskList.getAll());
             ui.showTaskAdded(e, taskList.size());
         } catch (DateTimeParseException e) {
-            ui.showError("The event time format is invalid, use YYYY-MM-DD HHMM or a valid date");
+            ui.showError(ERROR_INVALID_DATE);
         } catch (Exception e) {
             ui.showError("Invalid event command format!");
         }
@@ -142,12 +181,12 @@ public class Parser {
                                         TasksStorage storage, Ui ui) {
         try {
             if (arguments.trim().isEmpty()) {
-                throw new FengWeiException("Please specify the task number to mark.");
+                throw new FengWeiException(ERROR_SPECIFY_TASK_NUMBER);
             }
 
             String[] parts = arguments.trim().split("\\s+");
             if (parts.length != 1) {
-                throw new FengWeiException("Please specify only one task number to mark.");
+                throw new FengWeiException(ERROR_SINGLE_TASK_NUMBER);
             }
 
             int markNumber = Integer.parseInt(parts[0]) - 1;
@@ -161,7 +200,7 @@ public class Parser {
         } catch (FengWeiException e) {
             ui.showError(e.getMessage());
         } catch (NumberFormatException e) {
-            ui.showError("Please enter a valid task number!");
+            ui.showError(ERROR_INVALID_TASK_NUMBER);
         } catch (IndexOutOfBoundsException e) {
             ui.showError("Invalid task number! Please enter a number between 1 and " + taskList.size());
         }
@@ -171,12 +210,12 @@ public class Parser {
                                           TasksStorage storage, Ui ui) {
         try {
             if (arguments.trim().isEmpty()) {
-                throw new FengWeiException("Please specify the task number to unmark.");
+                throw new FengWeiException(ERROR_SPECIFY_TASK_NUMBER);
             }
 
             String[] parts = arguments.trim().split("\\s+");
             if (parts.length != 1) {
-                throw new FengWeiException("Please specify only one task number to unmark.");
+                throw new FengWeiException(ERROR_SINGLE_TASK_NUMBER);
             }
 
             int unmarkNumber = Integer.parseInt(parts[0]) - 1;
@@ -190,7 +229,7 @@ public class Parser {
         } catch (FengWeiException e) {
             ui.showError(e.getMessage());
         } catch (NumberFormatException e) {
-            ui.showError("Please enter a valid task number!");
+            ui.showError(ERROR_INVALID_TASK_NUMBER);
         } catch (IndexOutOfBoundsException e) {
             ui.showError("Invalid task number! Please enter a number between 1 and " + taskList.size());
         }
@@ -226,7 +265,7 @@ public class Parser {
     }
 
     private static void handleInvalidCommand(String input, TaskList taskList, Ui ui) {
-        ui.showError("Invalid command!");
+        ui.showError(ERROR_INVALID_COMMAND);
         Task normal = new Task(input, ' ');
         taskList.add(normal);
         ui.showLine();
@@ -246,24 +285,24 @@ public class Parser {
                                             TasksStorage storage) {
         try {
             switch (command) {
-            case "list":
+            case COMMAND_LIST:
                 return handleListCommandForGui(taskList);
-            case "find":
+            case COMMAND_FIND:
                 return handleFindCommandForGui(arguments, taskList);
-            case "todo":
+            case COMMAND_TODO:
                 return handleTodoCommandForGui(arguments, taskList, storage);
-            case "deadline":
+            case COMMAND_DEADLINE:
                 return handleDeadlineCommandForGui(arguments, taskList, storage);
-            case "event":
+            case COMMAND_EVENT:
                 return handleEventCommandForGui(arguments, taskList, storage);
-            case "mark":
+            case COMMAND_MARK:
                 return handleMarkCommandForGui(arguments, taskList, storage);
-            case "unmark":
+            case COMMAND_UNMARK:
                 return handleUnmarkCommandForGui(arguments, taskList, storage);
-            case "delete":
+            case COMMAND_DELETE:
                 return handleDeleteCommandForGui(arguments, taskList, storage);
             default:
-                return "OOPS!!! Invalid command!";
+                return ERROR_INVALID_COMMAND;
             }
         } catch (Exception e) {
             return "OOPS!!! An error occurred: " + e.getMessage();
@@ -295,7 +334,7 @@ public class Parser {
 
     private static String handleTodoCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         if (arguments.trim().isEmpty()) {
-            return "OOPS!!! The description of a todo cannot be empty.";
+            return ERROR_EMPTY_TODO;
         }
         Task t = new TodoTask(arguments);
         taskList.add(t);
@@ -307,19 +346,19 @@ public class Parser {
         try {
             String[] parts = arguments.split(" /by ", 2);
             if (parts.length < 2) {
-                return "OOPS!!! The deadline command must be in the format: deadline <description> /by <time>";
+                return ERROR_DEADLINE_FORMAT;
             }
             String deadlineDesc = parts[0].trim();
             String by = parts[1].trim();
             if (deadlineDesc.isEmpty()) {
-                return "OOPS!!! The description of a deadline cannot be empty.";
+                return ERROR_EMPTY_DEADLINE;
             }
             Task d = new DeadlineTask(deadlineDesc, by);
             taskList.add(d);
             storage.saveTasks(taskList.getAll());
             return "Got it. I've added this task:\n  " + d + "\nNow you have " + taskList.size() + " tasks in the list.";
         } catch (DateTimeParseException e) {
-            return "OOPS!!! The deadline time format is invalid, use YYYY-MM-DD HHMM or a valid date";
+            return ERROR_INVALID_DATE;
         } catch (Exception e) {
             return "OOPS!!! " + e.getMessage();
         }
@@ -329,23 +368,22 @@ public class Parser {
         try {
             String[] eventParts = arguments.split(" /from | /to ");
             if (eventParts.length < 3) {
-                return "OOPS!!! The event command must be in the format: event <description> /from <start> /to <end>";
+                return ERROR_EVENT_FORMAT;
             }
             String eventDesc = eventParts[0].trim();
             String from = eventParts[1].trim();
             String to = eventParts[2].trim();
             if (eventDesc.isEmpty()) {
-                return "OOPS!!! The description of an event cannot be empty.";
+                return ERROR_EMPTY_EVENT;
             }
-            DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-            LocalDateTime fromDateTime = LocalDateTime.parse(from, inputFormat);
-            LocalDateTime toDateTime = LocalDateTime.parse(to, inputFormat);
+            LocalDateTime fromDateTime = LocalDateTime.parse(from, DATE_TIME_FORMATTER);
+            LocalDateTime toDateTime = LocalDateTime.parse(to, DATE_TIME_FORMATTER);
             Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
             taskList.add(e);
             storage.saveTasks(taskList.getAll());
             return "Got it. I've added this task:\n  " + e + "\nNow you have " + taskList.size() + " tasks in the list.";
         } catch (DateTimeParseException e) {
-            return "OOPS!!! The event time format is invalid, use YYYY-MM-DD HHMM or a valid date";
+            return ERROR_INVALID_DATE;
         } catch (Exception e) {
             return "OOPS!!! " + e.getMessage();
         }

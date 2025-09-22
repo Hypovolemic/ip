@@ -8,7 +8,11 @@ import java.time.format.DateTimeParseException;
  * Represents a task that needs to be completed by a specific deadline.
  */
 public class DeadlineTask extends Task {
-    private LocalDateTime by;
+    private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+    private static final DateTimeFormatter OUTPUT_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy HHmm");
+    private static final char TASK_TYPE = 'D';
+
+    private final LocalDateTime by;
 
     /**
      * Constructs a DeadlineTask with the given description and deadline.
@@ -18,13 +22,19 @@ public class DeadlineTask extends Task {
      * @throws DateTimeParseException if the date-time string is not in the correct format.
      */
     public DeadlineTask(String description, String by) throws DateTimeParseException {
-        super(description, 'D');
+        super(description, TASK_TYPE);
         this.by = parseDateTime(by);
     }
 
-    private LocalDateTime parseDateTime(String by) throws DateTimeParseException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-        return LocalDateTime.parse(by, formatter);
+    /**
+     * Parses the deadline string into a LocalDateTime object.
+     *
+     * @param dateTimeString The deadline in "yyyy-MM-dd HHmm" format.
+     * @return The parsed LocalDateTime object.
+     * @throws DateTimeParseException if the date-time string is not in the correct format.
+     */
+    private LocalDateTime parseDateTime(String dateTimeString) throws DateTimeParseException {
+        return LocalDateTime.parse(dateTimeString, INPUT_FORMAT);
     }
 
     /**
@@ -33,8 +43,16 @@ public class DeadlineTask extends Task {
      * @return The formatted deadline string.
      */
     public String formatBy() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HHmm");
-        return by.format(formatter);
+        return by.format(OUTPUT_FORMAT);
+    }
+
+    /**
+     * Gets the deadline LocalDateTime.
+     *
+     * @return The deadline LocalDateTime object.
+     */
+    public LocalDateTime getBy() {
+        return by;
     }
 
     @Override
