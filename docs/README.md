@@ -2,7 +2,7 @@
 
 > A personal task management application built in Java with both command-line and graphical user interfaces.
 
-![FengWei Screenshot](src/main/resources/images/TheFengWei.png)
+![FengWei Screenshot](../src/main/resources/images/TheFengWei.png)
 
 ## Table of Contents
 
