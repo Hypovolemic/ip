@@ -1,190 +1,71 @@
-import exceptions.FengWeiException;
 import parser.Parser;
 import storage.TasksStorage;
-import tasks.Task;
-import tasks.DeadlineTask;
-import tasks.EventTask;
-import tasks.TodoTask;
 import tasks.TaskList;
 import ui.Ui;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
+/**
+ * Main class for the FengWei task management application.
+ * Handles the main application loop and coordinates between UI, Parser, and Storage.
+ */
 public class FengWei {
     private final Ui ui;
-    private TasksStorage storage = TasksStorage.getInstance();
-    private TaskList taskList = new TaskList(storage.loadTasks());
+    private TasksStorage storage;
+    private TaskList taskList;
 
     public FengWei() {
         this.ui = new Ui();
+        try {
+            this.storage = TasksStorage.getInstance();
+            this.taskList = new TaskList(storage.loadTasks());
+        } catch (Exception e) {
+            System.err.println("Error initializing storage: " + e.getMessage());
+            System.err.println("Starting with empty task list...");
+            // Still initialize storage even if loading fails
+            try {
+                this.storage = TasksStorage.getInstance();
+            } catch (Exception e2) {
+                System.err.println("Critical error: Cannot initialize storage at all!");
+                throw new RuntimeException("Failed to initialize storage", e2);
+            }
+            this.taskList = new TaskList();
+        }
     }
 
     public static void main(String[] args) {
-
-        new FengWei().run();
+        try {
+            new FengWei().run();
+        } catch (Exception e) {
+            System.err.println("Fatal error: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
+    /**
+     * Runs the main application loop.
+     * Continuously reads user input and executes commands until the user types "bye".
+     */
     public void run() {
         ui.showWelcome();
 
         while (true) {
-            String input = ui.readCommand();
-            String command = Parser.getCommand(input);
-            String arguments = Parser.getArguments(input);
+            try {
+                String input = ui.readCommand();
+                String command = Parser.getCommand(input);
+                String arguments = Parser.getArguments(input);
 
-            if (command.isEmpty()) {
-                ui.showLine();
-                ui.showError("Invalid command!");
-                continue;
-            }
-
-            if (command.equals("bye")) {
-                break;
-            }
-
-            switch (command) {
-            case "list":
-                ui.showLine();
-                System.out.println("Here are the tasks in your list:");
-                for (int i = 0; i < taskList.size(); i++) {
-                    System.out.println((i + 1) + "." + taskList.get(i));
-                }
-                ui.showLine();
-                continue;
-            case "find":
-                ui.showLine();
-                System.out.println("Here are the matching tasks in your list:");
-                var found = taskList.findTasks(arguments);
-                for (int i = 0; i < found.size(); i++) {
-                    System.out.println((i + 1) + "." + found.get(i));
-                }
-                ui.showLine();
-                continue;
-            case "todo":
-                Task t = new TodoTask(arguments);
-                taskList.add(t);
-                ui.showLine();
-                System.out.println("Got it. I've added this task:");
-                System.out.println(" " + t);
-                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
-                ui.showLine();
-                continue;
-            case "deadline":
-                try {
-                    String[] parts = arguments.split(" /by ", 2);
-                    if (parts.length < 2) {
-                        ui.showLine();
-                        ui.showError("The deadline command must be in the format: deadline <description> /by <time>");
-                        continue;
-                    }
-                    String deadlineDesc = parts[0].trim();
-                    String by = parts[1].trim();
-                    Task d = new DeadlineTask(deadlineDesc, by);
-                    taskList.add(d);
-                    ui.showLine();
-                    System.out.println("Got it. I've added this task:");
-                    System.out.println("  " + d);
-                    System.out.println("Now you have " + taskList.size() + " tasks in the list.");
-                    ui.showLine();
-                } catch (DateTimeParseException e) {
-                    ui.showLine();
-                    ui.showError("The deadline time format is invalid, use YYYY-MM-DD HHMM or a valid date");
-                } catch (Exception e) {
-                    ui.showLine();
-                    ui.showError("Invalid deadline command format!");
-                }
-                continue;
-            case "event":
-                try {
-                    String[] eventParts = arguments.split(" /from | /to ");
-                    if (eventParts.length < 3) {
-                        ui.showLine();
-                        ui.showError("The event command must be in the format: event <description> /from <start> /to <end>");
-                        continue;
-                    }
-                    String eventDesc = eventParts[0].substring(6).trim();
-                    String from = eventParts[1].trim();
-                    String to = eventParts[2].trim();
-                    DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-                    LocalDateTime fromDateTime = LocalDateTime.parse(from, inputFormat);
-                    LocalDateTime toDateTime = LocalDateTime.parse(to, inputFormat);
-                    Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
-                    taskList.add(e);
-                    ui.showLine();
-                    System.out.println("Got it. I've added this task:");
-                    System.out.println("  " + e);
-                    System.out.println("Now you have " + taskList.size() + " tasks in the list.");
-                    ui.showLine();
-                } catch (DateTimeParseException e) {
-                    ui.showLine();
-                    ui.showError("The event time format is invalid, use YYYY-MM-DD HHMM or a valid date");
-                } catch (Exception e) {
-                    ui.showLine();
-                    ui.showError("Invalid event command format!");
-                }
-                continue;
-            case "mark":
-                String[] taskMarks = arguments.split(" ");
-                try {
-                    if (taskMarks.length < 2) {
-                        throw new FengWeiException("Please specify the task number to mark.");
-                    }
-                } catch (FengWeiException e) {
-                    ui.showLine();
-                    ui.showError(e.getMessage());
+                if (command.isEmpty()) {
+                    ui.showError("Invalid command!");
                     continue;
                 }
 
-                try {
-                    if (taskMarks.length > 2) {
-                        throw new FengWeiException("Too many arguments");
-                    }
-                } catch (FengWeiException e) {
-                    ui.showLine();
-                    ui.showError(e.getMessage());
-                    continue;
+                if (command.equals("bye")) {
+                    break;
                 }
 
-                int markNumber = Integer.parseInt(taskMarks[1]) - 1;
-                taskList.markAsDone(markNumber);
-
-                ui.showLine();
-                System.out.println("Nice! I've marked this task as done:");
-                System.out.println("    " + taskList.get(markNumber));
-                ui.showLine();
-                break;
-            case "unmark":
-                String[] taskUnmarks = arguments.split(" ");
-                int unmarkNumber = Integer.parseInt(taskUnmarks[1]) - 1;
-                taskList.markAsNotDone(unmarkNumber);
-                storage.saveTasks(taskList.getAll());
-                ui.showLine();
-                System.out.println("OK, I've marked this task as not done yet:");
-                System.out.println("    " + taskList.get(unmarkNumber));
-                ui.showLine();
-                storage.saveTasks(taskList.getAll());
-                continue;
-            case "delete":
-                String[] parts = arguments.split(" ");
-                int deleteNumber = Integer.parseInt(parts[1]) - 1;
-                Task removedTask = taskList.remove(deleteNumber);
-                ui.showLine();
-                System.out.println("Noted. I've removed this task:");
-                System.out.println(" " + removedTask);
-                System.out.println("Now you have " + taskList.size() + " tasks in the list.");
-                ui.showLine();
-                storage.saveTasks(taskList.getAll());
-                continue;
-            default:
-                ui.showLine();
-                ui.showError("Invalid command!");
-                Task normal = new Task(input, ' ');
-                taskList.add(normal);
-                ui.showLine();
-                System.out.println("added: " + input);
-                ui.showLine();
+                Parser.executeCommand(command, arguments, taskList, storage, ui);
+            } catch (Exception e) {
+                ui.showError("An error occurred: " + e.getMessage());
             }
         }
 

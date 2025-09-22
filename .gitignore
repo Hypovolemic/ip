@@ -13,5 +13,10 @@ src/main/resources/docs/
 *.iml
 bin/
 
+# Text UI Test files
 /text-ui-test/ACTUAL.TXT
 text-ui-test/EXPECTED-UNIX.TXT
+
+# Data files - user-generated content should not be in version control
+/data/
+src/main/java/data/
