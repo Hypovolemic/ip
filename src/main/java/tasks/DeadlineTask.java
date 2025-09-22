@@ -19,12 +19,25 @@ public class DeadlineTask extends Task {
      */
     public DeadlineTask(String description, String by) throws DateTimeParseException {
         super(description, 'D');
+
+        // Assertions after super() call
+        assert description != null : "Deadline description should not be null";
+        assert !description.trim().isEmpty() : "Deadline description should not be empty";
+        assert by != null : "Deadline time string should not be null";
+        assert !by.trim().isEmpty() : "Deadline time string should not be empty";
+
         this.by = parseDateTime(by);
+
+        assert this.by != null : "Parsed deadline should not be null";
+        assert getType() == 'D' : "DeadlineTask should have type 'D'";
     }
 
     private LocalDateTime parseDateTime(String by) throws DateTimeParseException {
+        assert by != null : "Input date string should not be null";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-        return LocalDateTime.parse(by, formatter);
+        LocalDateTime result = LocalDateTime.parse(by, formatter);
+        assert result != null : "Parsed LocalDateTime should not be null";
+        return result;
     }
 
     /**
@@ -33,12 +46,20 @@ public class DeadlineTask extends Task {
      * @return The formatted deadline string.
      */
     public String formatBy() {
+        assert by != null : "Deadline should be set before formatting";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HHmm");
-        return by.format(formatter);
+        String formatted = by.format(formatter);
+        assert formatted != null : "Formatted date should not be null";
+        assert !formatted.isEmpty() : "Formatted date should not be empty";
+        return formatted;
     }
 
     @Override
     public String toString() {
-        return super.toString() + " (by: " + formatBy() + ")";
+        String result = super.toString() + " (by: " + formatBy() + ")";
+        assert result != null : "toString should not return null";
+        assert result.contains(getDescription()) : "toString should contain task description";
+        assert result.contains("by:") : "toString should contain deadline indicator";
+        return result;
     }
 }
