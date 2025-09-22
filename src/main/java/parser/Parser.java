@@ -24,7 +24,9 @@ public class Parser {
      * @return the command word
      */
     public static String getCommand(String input) {
+        assert input != null : "Input should not be null";
         String[] parts = input.trim().split(" ", 2);
+        assert parts != null && parts.length > 0 : "Split should always return at least one element";
         return parts[0];
     }
 
@@ -34,7 +36,9 @@ public class Parser {
      * @return the arguments part of the input
      */
     public static String getArguments(String input) {
+        assert input != null : "Input should not be null";
         String[] parts = input.trim().split(" ", 2);
+        assert parts != null && parts.length > 0 : "Split should always return at least one element";
         return parts.length > 1 ? parts[1] : "";
     }
 
@@ -48,6 +52,12 @@ public class Parser {
      */
     public static void executeCommand(String command, String arguments, TaskList taskList,
                                     TasksStorage storage, Ui ui) {
+        assert command != null : "Command should not be null";
+        assert arguments != null : "Arguments should not be null";
+        assert taskList != null : "TaskList should not be null";
+        assert storage != null : "Storage should not be null";
+        assert ui != null : "UI should not be null";
+
         switch (command) {
         case "list":
             handleListCommand(taskList, ui);
@@ -244,40 +254,59 @@ public class Parser {
      */
     public static String executeCommandForGui(String command, String arguments, TaskList taskList,
                                             TasksStorage storage) {
+        assert command != null : "Command should not be null";
+        assert arguments != null : "Arguments should not be null";
+        assert taskList != null : "TaskList should not be null";
+        assert storage != null : "Storage should not be null";
+
         try {
+            String response;
             switch (command) {
             case "list":
-                return handleListCommandForGui(taskList);
+                response = handleListCommandForGui(taskList);
+                break;
             case "find":
-                return handleFindCommandForGui(arguments, taskList);
+                response = handleFindCommandForGui(arguments, taskList);
+                break;
             case "todo":
-                return handleTodoCommandForGui(arguments, taskList, storage);
+                response = handleTodoCommandForGui(arguments, taskList, storage);
+                break;
             case "deadline":
-                return handleDeadlineCommandForGui(arguments, taskList, storage);
+                response = handleDeadlineCommandForGui(arguments, taskList, storage);
+                break;
             case "event":
-                return handleEventCommandForGui(arguments, taskList, storage);
+                response = handleEventCommandForGui(arguments, taskList, storage);
+                break;
             case "mark":
-                return handleMarkCommandForGui(arguments, taskList, storage);
+                response = handleMarkCommandForGui(arguments, taskList, storage);
+                break;
             case "unmark":
-                return handleUnmarkCommandForGui(arguments, taskList, storage);
+                response = handleUnmarkCommandForGui(arguments, taskList, storage);
+                break;
             case "delete":
-                return handleDeleteCommandForGui(arguments, taskList, storage);
+                response = handleDeleteCommandForGui(arguments, taskList, storage);
+                break;
             default:
-                return "OOPS!!! Invalid command!";
+                response = "OOPS!!! Invalid command!";
             }
+            assert response != null : "Response should never be null";
+            return response;
         } catch (Exception e) {
             return "OOPS!!! An error occurred: " + e.getMessage();
         }
     }
 
     private static String handleListCommandForGui(TaskList taskList) {
+        assert taskList != null : "TaskList should not be null";
         if (taskList.size() == 0) {
             return "Your task list is empty!";
         }
         StringBuilder response = new StringBuilder("Here are the tasks in your list:\n");
         for (int i = 0; i < taskList.size(); i++) {
+            assert taskList.get(i) != null : "Task at index " + i + " should not be null";
             response.append((i + 1)).append(".").append(taskList.get(i)).append("\n");
         }
+        assert response.length() > 0 : "Response should not be empty for non-empty task list";
         return response.toString();
     }
 
@@ -294,11 +323,21 @@ public class Parser {
     }
 
     private static String handleTodoCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
+        assert arguments != null : "Arguments should not be null";
+        assert taskList != null : "TaskList should not be null";
+        assert storage != null : "Storage should not be null";
+
         if (arguments.trim().isEmpty()) {
             return "OOPS!!! The description of a todo cannot be empty.";
         }
+
+        int initialSize = taskList.size();
         Task t = new TodoTask(arguments);
+        assert t != null : "TodoTask should be successfully created";
+
         taskList.add(t);
+        assert taskList.size() == initialSize + 1 : "TaskList size should increase by 1 after adding task";
+
         storage.saveTasks(taskList.getAll());
         return "Got it. I've added this task:\n  " + t + "\nNow you have " + taskList.size() + " tasks in the list.";
     }
