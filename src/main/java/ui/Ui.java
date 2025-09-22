@@ -145,4 +145,25 @@ public class Ui {
         System.out.println("Now you have " + remainingTasks + " tasks in the list.");
         showLine();
     }
+
+    /**
+     * Displays the help information showing available commands.
+     */
+    public void showHelp() {
+        showLine();
+        System.out.println("Here are the available commands:");
+        System.out.println("1. list - Shows the list of tasks.");
+        System.out.println("2. find <keyword> - Finds tasks matching the keyword.");
+        System.out.println("3. todo <description> - Adds a todo task.");
+        System.out.println("4. deadline <description> /by <time> - Adds a deadline task.");
+        System.out.println("   Time format: YYYY-MM-DD HHMM (e.g., 2025-12-25 1400)");
+        System.out.println("5. event <description> /from <start> /to <end> - Adds an event task.");
+        System.out.println("   Time format: YYYY-MM-DD HHMM (e.g., 2025-12-25 1400)");
+        System.out.println("6. mark <task number> - Marks a task as done.");
+        System.out.println("7. unmark <task number> - Marks a task as not done.");
+        System.out.println("8. delete <task number> - Deletes a task from the list.");
+        System.out.println("9. help - Shows this help message.");
+        System.out.println("10. bye - Exits the program.");
+        showLine();
+    }
 }

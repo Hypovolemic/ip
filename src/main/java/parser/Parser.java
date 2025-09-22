@@ -27,6 +27,7 @@ public class Parser {
     private static final String COMMAND_MARK = "mark";
     private static final String COMMAND_UNMARK = "unmark";
     private static final String COMMAND_DELETE = "delete";
+    private static final String COMMAND_HELP = "help";
     private static final String COMMAND_BYE = "bye";
 
     // Split limits
@@ -123,6 +124,9 @@ public class Parser {
             break;
         case COMMAND_DELETE:
             handleDeleteCommand(arguments, taskList, storage, ui);
+            break;
+        case COMMAND_HELP:
+            handleHelpCommand(ui);
             break;
         default:
             handleInvalidCommand(command, taskList, ui);
@@ -297,6 +301,14 @@ public class Parser {
     }
 
     /**
+     * Handles the help command by displaying usage information.
+     * @param ui the user interface for output
+     */
+    private static void handleHelpCommand(Ui ui) {
+        ui.showHelp();
+    }
+
+    /**
      * Executes a command and returns a string response for GUI display.
      * @param command the command to execute
      * @param arguments the arguments for the command
@@ -337,6 +349,9 @@ public class Parser {
                 break;
             case COMMAND_DELETE:
                 response = handleDeleteCommandForGui(arguments, taskList, storage);
+                break;
+            case COMMAND_HELP:
+                response = handleHelpCommandForGui();
                 break;
             default:
                 response = ERROR_INVALID_COMMAND;
@@ -518,5 +533,19 @@ public class Parser {
         } catch (IndexOutOfBoundsException e) {
             return "Invalid task number! Please enter a number between 1 and " + taskList.size();
         }
+    }
+
+    private static String handleHelpCommandForGui() {
+        return "Here are the available commands:\n"
+                + "1. list - Shows the list of tasks.\n"
+                + "2. find <keyword> - Finds tasks matching the keyword.\n"
+                + "3. todo <description> - Adds a todo task.\n"
+                + "4. deadline <description> /by <time> - Adds a deadline task.\n"
+                + "5. event <description> /from <start> /to <end> - Adds an event task.\n"
+                + "6. mark <task number> - Marks a task as done.\n"
+                + "7. unmark <task number> - Marks a task as not done.\n"
+                + "8. delete <task number> - Deletes a task from the list.\n"
+                + "9. help - Shows this help message.\n"
+                + "10. bye - Exits the program.";
     }
 }
