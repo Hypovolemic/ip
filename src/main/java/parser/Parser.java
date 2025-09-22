@@ -139,29 +139,37 @@ public class Parser {
     }
 
     private static void handleTodoCommand(String arguments, TaskList taskList, Ui ui, TasksStorage storage) {
-        Task t = new TodoTask(arguments);
-        taskList.add(t);
-        storage.saveTasks(taskList.getAll());
-        ui.showTaskAdded(t, taskList.size());
+        try {
+            Task t = new TodoTask(arguments);
+            taskList.add(t);
+            storage.saveTasks(taskList.getAll());
+            ui.showTaskAdded(t, taskList.size());
+        } catch (FengWeiException e) {
+            ui.showError(e.getMessage());
+        }
     }
 
     private static void handleDeadlineCommand(String arguments, TaskList taskList, Ui ui, TasksStorage storage) {
         try {
             String[] parts = arguments.split(DEADLINE_DELIMITER, 2);
             if (parts.length < 2) {
-                ui.showError(ERROR_DEADLINE_FORMAT);
-                return;
+                throw new FengWeiException(ERROR_DEADLINE_FORMAT);
             }
             String deadlineDesc = parts[0].trim();
             String by = parts[1].trim();
+
+            if (deadlineDesc.isEmpty()) {
+                throw new FengWeiException(ERROR_EMPTY_DEADLINE);
+            }
+
             Task d = new DeadlineTask(deadlineDesc, by);
             taskList.add(d);
             storage.saveTasks(taskList.getAll());
             ui.showTaskAdded(d, taskList.size());
+        } catch (FengWeiException e) {
+            ui.showError(e.getMessage());
         } catch (DateTimeParseException e) {
             ui.showError(ERROR_INVALID_DATE);
-        } catch (Exception e) {
-            ui.showError("Invalid deadline command format!");
         }
     }
 
@@ -169,22 +177,26 @@ public class Parser {
         try {
             String[] eventParts = arguments.split(EVENT_DELIMITER_PATTERN);
             if (eventParts.length < 3) {
-                ui.showError(ERROR_EVENT_FORMAT);
-                return;
+                throw new FengWeiException(ERROR_EVENT_FORMAT);
             }
             String eventDesc = eventParts[0].trim();
             String from = eventParts[1].trim();
             String to = eventParts[2].trim();
+
+            if (eventDesc.isEmpty()) {
+                throw new FengWeiException(ERROR_EMPTY_EVENT);
+            }
+
             LocalDateTime fromDateTime = LocalDateTime.parse(from, DATE_TIME_FORMATTER);
             LocalDateTime toDateTime = LocalDateTime.parse(to, DATE_TIME_FORMATTER);
             Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
             taskList.add(e);
             storage.saveTasks(taskList.getAll());
             ui.showTaskAdded(e, taskList.size());
+        } catch (FengWeiException e) {
+            ui.showError(e.getMessage());
         } catch (DateTimeParseException e) {
             ui.showError(ERROR_INVALID_DATE);
-        } catch (Exception e) {
-            ui.showError("Invalid event command format!");
         }
     }
 
@@ -363,138 +375,148 @@ public class Parser {
     }
 
     private static String handleTodoCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
-        assert arguments != null : "Arguments should not be null";
-        assert taskList != null : "TaskList should not be null";
-        assert storage != null : "Storage should not be null";
-
-        if (arguments.trim().isEmpty()) {
-            return ERROR_EMPTY_TODO;
+        try {
+            Task t = new TodoTask(arguments);
+            taskList.add(t);
+            storage.saveTasks(taskList.getAll());
+            return "Got it. I've added this task:\n  " + t + "\nNow you have " + taskList.size() + " tasks in the list.";
+        } catch (FengWeiException e) {
+            return e.getMessage();
         }
-
-        int initialSize = taskList.size();
-        Task t = new TodoTask(arguments);
-        assert t != null : "TodoTask should be successfully created";
-
-        taskList.add(t);
-        assert taskList.size() == initialSize + 1 : "TaskList size should increase by 1 after adding task";
-
-        storage.saveTasks(taskList.getAll());
-        return "Got it. I've added this task:\n  " + t + "\nNow you have " + taskList.size() + " tasks in the list.";
     }
 
     private static String handleDeadlineCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         try {
-            String[] parts = arguments.split(" /by ", 2);
+            String[] parts = arguments.split(DEADLINE_DELIMITER, 2);
             if (parts.length < 2) {
-                return ERROR_DEADLINE_FORMAT;
+                throw new FengWeiException(ERROR_DEADLINE_FORMAT);
             }
             String deadlineDesc = parts[0].trim();
             String by = parts[1].trim();
+
             if (deadlineDesc.isEmpty()) {
-                return ERROR_EMPTY_DEADLINE;
+                throw new FengWeiException(ERROR_EMPTY_DEADLINE);
             }
+
             Task d = new DeadlineTask(deadlineDesc, by);
             taskList.add(d);
             storage.saveTasks(taskList.getAll());
             return "Got it. I've added this task:\n  " + d + "\nNow you have " + taskList.size() + " tasks in the list.";
+        } catch (FengWeiException e) {
+            return e.getMessage();
         } catch (DateTimeParseException e) {
             return ERROR_INVALID_DATE;
-        } catch (Exception e) {
-            return "OOPS!!! " + e.getMessage();
         }
     }
 
     private static String handleEventCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         try {
-            String[] eventParts = arguments.split(" /from | /to ");
+            String[] eventParts = arguments.split(EVENT_DELIMITER_PATTERN);
             if (eventParts.length < 3) {
-                return ERROR_EVENT_FORMAT;
+                throw new FengWeiException(ERROR_EVENT_FORMAT);
             }
             String eventDesc = eventParts[0].trim();
             String from = eventParts[1].trim();
             String to = eventParts[2].trim();
+
             if (eventDesc.isEmpty()) {
-                return ERROR_EMPTY_EVENT;
+                throw new FengWeiException(ERROR_EMPTY_EVENT);
             }
+
             LocalDateTime fromDateTime = LocalDateTime.parse(from, DATE_TIME_FORMATTER);
             LocalDateTime toDateTime = LocalDateTime.parse(to, DATE_TIME_FORMATTER);
             Task e = new EventTask(eventDesc, fromDateTime, toDateTime);
             taskList.add(e);
             storage.saveTasks(taskList.getAll());
             return "Got it. I've added this task:\n  " + e + "\nNow you have " + taskList.size() + " tasks in the list.";
+        } catch (FengWeiException e) {
+            return e.getMessage();
         } catch (DateTimeParseException e) {
             return ERROR_INVALID_DATE;
-        } catch (Exception e) {
-            return "OOPS!!! " + e.getMessage();
         }
     }
 
     private static String handleMarkCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         try {
             if (arguments.trim().isEmpty()) {
-                return "OOPS!!! Please specify the task number to mark.";
+                throw new FengWeiException(ERROR_SPECIFY_TASK_NUMBER);
             }
+
             String[] parts = arguments.trim().split("\\s+");
             if (parts.length != 1) {
-                return "OOPS!!! Please specify only one task number to mark.";
+                throw new FengWeiException(ERROR_SINGLE_TASK_NUMBER);
             }
+
             int markNumber = Integer.parseInt(parts[0]) - 1;
             if (markNumber < 0 || markNumber >= taskList.size()) {
-                return "OOPS!!! Invalid task number! Please enter a number between 1 and " + taskList.size();
+                throw new IndexOutOfBoundsException("Task number out of range.");
             }
+
             taskList.markAsDone(markNumber);
             storage.saveTasks(taskList.getAll());
             return "Nice! I've marked this task as done:\n    " + taskList.get(markNumber);
+        } catch (FengWeiException e) {
+            return e.getMessage();
         } catch (NumberFormatException e) {
-            return "OOPS!!! Please enter a valid task number!";
-        } catch (Exception e) {
-            return "OOPS!!! " + e.getMessage();
+            return ERROR_INVALID_TASK_NUMBER;
+        } catch (IndexOutOfBoundsException e) {
+            return "Invalid task number! Please enter a number between 1 and " + taskList.size();
         }
     }
 
     private static String handleUnmarkCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         try {
             if (arguments.trim().isEmpty()) {
-                return "OOPS!!! Please specify the task number to unmark.";
+                throw new FengWeiException(ERROR_SPECIFY_TASK_NUMBER);
             }
+
             String[] parts = arguments.trim().split("\\s+");
             if (parts.length != 1) {
-                return "OOPS!!! Please specify only one task number to unmark.";
+                throw new FengWeiException(ERROR_SINGLE_TASK_NUMBER);
             }
+
             int unmarkNumber = Integer.parseInt(parts[0]) - 1;
             if (unmarkNumber < 0 || unmarkNumber >= taskList.size()) {
-                return "OOPS!!! Invalid task number! Please enter a number between 1 and " + taskList.size();
+                throw new IndexOutOfBoundsException("Task number out of range.");
             }
+
             taskList.markAsNotDone(unmarkNumber);
             storage.saveTasks(taskList.getAll());
             return "OK, I've marked this task as not done yet:\n    " + taskList.get(unmarkNumber);
+        } catch (FengWeiException e) {
+            return e.getMessage();
         } catch (NumberFormatException e) {
-            return "OOPS!!! Please enter a valid task number!";
-        } catch (Exception e) {
-            return "OOPS!!! " + e.getMessage();
+            return ERROR_INVALID_TASK_NUMBER;
+        } catch (IndexOutOfBoundsException e) {
+            return "Invalid task number! Please enter a number between 1 and " + taskList.size();
         }
     }
 
     private static String handleDeleteCommandForGui(String arguments, TaskList taskList, TasksStorage storage) {
         try {
             if (arguments.trim().isEmpty()) {
-                return "OOPS!!! Please specify the task number to delete.";
+                throw new FengWeiException("OOPS!!! Please specify the task number to delete.");
             }
+
             String[] parts = arguments.trim().split("\\s+");
             if (parts.length != 1) {
-                return "OOPS!!! Please specify only one task number to delete.";
+                throw new FengWeiException("OOPS!!! Please specify only one task number to delete.");
             }
+
             int deleteNumber = Integer.parseInt(parts[0]) - 1;
             if (deleteNumber < 0 || deleteNumber >= taskList.size()) {
-                return "OOPS!!! Invalid task number! Please enter a number between 1 and " + taskList.size();
+                throw new IndexOutOfBoundsException("Task number out of range.");
             }
+
             Task removedTask = taskList.remove(deleteNumber);
             storage.saveTasks(taskList.getAll());
             return "Noted. I've removed this task:\n " + removedTask + "\nNow you have " + taskList.size() + " tasks in the list.";
+        } catch (FengWeiException e) {
+            return e.getMessage();
         } catch (NumberFormatException e) {
             return "OOPS!!! Please enter a valid task number!";
-        } catch (Exception e) {
-            return "OOPS!!! " + e.getMessage();
+        } catch (IndexOutOfBoundsException e) {
+            return "Invalid task number! Please enter a number between 1 and " + taskList.size();
         }
     }
 }

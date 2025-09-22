@@ -3,6 +3,7 @@ package tasks;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import exceptions.FengWeiException;
 
 /**
  * Represents a task that needs to be completed by a specific deadline.
@@ -19,10 +20,11 @@ public class DeadlineTask extends Task {
      *
      * @param description The description of the task.
      * @param by The deadline in "yyyy-MM-dd HHmm" format.
+     * @throws FengWeiException if the description is null or empty
      * @throws DateTimeParseException if the date-time string is not in the correct format.
      */
-    public DeadlineTask(String description, String by) throws DateTimeParseException {
-        super(description, TASK_TYPE);
+    public DeadlineTask(String description, String by) throws FengWeiException, DateTimeParseException {
+        super(validateDescription(description), TASK_TYPE);
 
         // Assertions after super() call
         assert description != null : "Deadline description should not be null";
@@ -30,10 +32,44 @@ public class DeadlineTask extends Task {
         assert by != null : "Deadline time string should not be null";
         assert !by.trim().isEmpty() : "Deadline time string should not be empty";
 
-        this.by = parseDateTime(by);
+        this.by = parseDateTime(validateDateTime(by));
 
         assert this.by != null : "Parsed deadline should not be null";
         assert getType() == TASK_TYPE : "DeadlineTask should have type 'D'";
+    }
+
+    /**
+     * Validates the task description.
+     *
+     * @param description the description to validate
+     * @return the validated description
+     * @throws FengWeiException if the description is invalid
+     */
+    private static String validateDescription(String description) throws FengWeiException {
+        if (description == null) {
+            throw new FengWeiException("OOPS!!! The description of a deadline cannot be null.");
+        }
+        if (description.trim().isEmpty()) {
+            throw new FengWeiException("OOPS!!! The description of a deadline cannot be empty.");
+        }
+        return description;
+    }
+
+    /**
+     * Validates the deadline date-time string.
+     *
+     * @param dateTimeString the date-time string to validate
+     * @return the validated date-time string
+     * @throws FengWeiException if the date-time string is invalid
+     */
+    private static String validateDateTime(String dateTimeString) throws FengWeiException {
+        if (dateTimeString == null) {
+            throw new FengWeiException("OOPS!!! The deadline time cannot be null.");
+        }
+        if (dateTimeString.trim().isEmpty()) {
+            throw new FengWeiException("OOPS!!! The deadline time cannot be empty.");
+        }
+        return dateTimeString;
     }
 
     /**

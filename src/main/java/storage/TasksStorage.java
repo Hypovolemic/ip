@@ -10,6 +10,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import exceptions.FengWeiException;
 import tasks.DeadlineTask;
 import tasks.EventTask;
 import tasks.Task;
@@ -182,15 +183,20 @@ public class TasksStorage {
      * @throws IllegalArgumentException if the task type is unknown or format is invalid
      */
     private Task createTaskByType(char taskType, String description, String[] parts) {
-        switch (taskType) {
-        case TODO_TYPE:
-            return new TodoTask(description);
-        case DEADLINE_TYPE:
-            return createDeadlineTask(description, parts);
-        case EVENT_TYPE:
-            return createEventTask(description, parts);
-        default:
-            throw new IllegalArgumentException("Unknown task type: " + taskType);
+        try {
+            switch (taskType) {
+            case TODO_TYPE:
+                return new TodoTask(description);
+            case DEADLINE_TYPE:
+                return createDeadlineTask(description, parts);
+            case EVENT_TYPE:
+                return createEventTask(description, parts);
+            default:
+                throw new IllegalArgumentException("Unknown task type: " + taskType);
+            }
+        } catch (FengWeiException e) {
+            // Re-throw FengWeiException as IllegalArgumentException to maintain existing error handling
+            throw new IllegalArgumentException("Invalid task data: " + e.getMessage(), e);
         }
     }
 
@@ -201,8 +207,9 @@ public class TasksStorage {
      * @param parts the parsed parts
      * @return the deadline task
      * @throws IllegalArgumentException if the format is invalid
+     * @throws FengWeiException if task creation fails
      */
-    private DeadlineTask createDeadlineTask(String description, String[] parts) {
+    private DeadlineTask createDeadlineTask(String description, String[] parts) throws FengWeiException {
         if (parts.length < MIN_DEADLINE_PARTS) {
             throw new IllegalArgumentException("Deadline task missing 'by' field");
         }
@@ -217,8 +224,9 @@ public class TasksStorage {
      * @param parts the parsed parts
      * @return the event task
      * @throws IllegalArgumentException if the format is invalid
+     * @throws FengWeiException if task creation fails
      */
-    private EventTask createEventTask(String description, String[] parts) {
+    private EventTask createEventTask(String description, String[] parts) throws FengWeiException {
         if (parts.length < MIN_EVENT_PARTS) {
             throw new IllegalArgumentException("Event task missing from/to fields");
         }

@@ -24,7 +24,8 @@ public class FengWei {
      */
     public FengWei() {
         this.ui = new Ui();
-<<<<<<< HEAD
+        assert ui != null : "UI should be successfully initialized";
+
         this.storage = initializeStorage();
         this.taskList = initializeTaskList();
     }
@@ -37,32 +38,12 @@ public class FengWei {
      */
     private TasksStorage initializeStorage() {
         try {
-            return TasksStorage.getInstance();
+            TasksStorage storage = TasksStorage.getInstance();
+            assert storage != null : "Storage should be successfully initialized";
+            return storage;
         } catch (Exception e) {
             System.err.println("Error initializing storage: " + e.getMessage());
             throw new RuntimeException("Failed to initialize storage", e);
-=======
-        assert ui != null : "UI should be successfully initialized";
-
-        try {
-            this.storage = TasksStorage.getInstance();
-            this.taskList = new TaskList(storage.loadTasks());
-            assert storage != null : "Storage should be successfully initialized";
-            assert taskList != null : "TaskList should be successfully initialized";
-        } catch (Exception e) {
-            System.err.println("Error initializing storage: " + e.getMessage());
-            System.err.println("Starting with empty task list...");
-            // Still initialize storage even if loading fails
-            try {
-                this.storage = TasksStorage.getInstance();
-                assert storage != null : "Storage should be initialized even after loading failure";
-            } catch (Exception e2) {
-                System.err.println("Critical error: Cannot initialize storage at all!");
-                throw new RuntimeException("Failed to initialize storage", e2);
-            }
-            this.taskList = new TaskList();
-            assert taskList != null : "TaskList should be initialized even with empty list";
->>>>>>> master
         }
     }
 
@@ -74,11 +55,15 @@ public class FengWei {
      */
     private TaskList initializeTaskList() {
         try {
-            return new TaskList(storage.loadTasks());
+            TaskList taskList = new TaskList(storage.loadTasks());
+            assert taskList != null : "TaskList should be successfully initialized";
+            return taskList;
         } catch (Exception e) {
             System.err.println("Error loading tasks: " + e.getMessage());
             System.err.println("Starting with empty task list...");
-            return new TaskList();
+            TaskList emptyTaskList = new TaskList();
+            assert emptyTaskList != null : "TaskList should be initialized even with empty list";
+            return emptyTaskList;
         }
     }
 
@@ -166,16 +151,11 @@ public class FengWei {
             String command = Parser.getCommand(input);
             String arguments = Parser.getArguments(input);
 
-<<<<<<< HEAD
-            if (!isValidCommand(command)) {
-                return ERROR_INVALID_COMMAND;
-=======
             assert command != null : "Parser should never return null command";
             assert arguments != null : "Parser should never return null arguments";
 
             if (command.isEmpty()) {
                 return "OOPS!!! Invalid command!";
->>>>>>> master
             }
 
             if (isExitCommand(command)) {
