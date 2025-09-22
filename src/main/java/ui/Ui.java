@@ -22,6 +22,14 @@ public class Ui {
     }
 
     /**
+     * Gets the welcome message as a string for GUI display.
+     * @return the welcome message string
+     */
+    public String getWelcomeMessage() {
+        return "Hello! I'm FengWei\nWhat can I do for you?";
+    }
+
+    /**
      * Displays a separator line.
      */
     public void showLine() {

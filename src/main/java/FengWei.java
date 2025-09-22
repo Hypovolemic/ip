@@ -71,4 +71,37 @@ public class FengWei {
 
         ui.showBye();
     }
+
+    /**
+     * Processes user input and returns a response for the GUI.
+     * @param input the user's input command
+     * @return the response string to display in the GUI
+     */
+    public String getResponse(String input) {
+        try {
+            String command = Parser.getCommand(input);
+            String arguments = Parser.getArguments(input);
+
+            if (command.isEmpty()) {
+                return "OOPS!!! Invalid command!";
+            }
+
+            if (command.equals("bye")) {
+                return "Bye. Hope to see you again soon!";
+            }
+
+            return Parser.executeCommandForGui(command, arguments, taskList, storage);
+        } catch (Exception e) {
+            return "OOPS!!! An error occurred: " + e.getMessage();
+        }
+    }
+
+
+    /**
+     * Gets the welcome message for GUI display.
+     * @return the welcome message string
+     */
+    public String getWelcomeMessage() {
+        return ui.getWelcomeMessage();
+    }
 }
