@@ -25,12 +25,24 @@ public class EventTask extends Task {
     public EventTask(String description, LocalDateTime from, LocalDateTime to) {
         super(description, TASK_TYPE);
 
+        // Assertions after super() call - from Assertions branch
+        assert description != null : "Event description should not be null";
+        assert !description.trim().isEmpty() : "Event description should not be empty";
+        assert from != null : "Event start time should not be null";
+        assert to != null : "Event end time should not be null";
+        assert !to.isBefore(from) : "Event end time should not be before start time";
+
+        // Input validation - from CodeQuality branch
         if (to.isBefore(from)) {
             throw new IllegalArgumentException("Event end time cannot be before start time");
         }
 
         this.from = from;
         this.to = to;
+
+        assert this.from != null : "Start time should be properly initialized";
+        assert this.to != null : "End time should be properly initialized";
+        assert getType() == TASK_TYPE : "EventTask should have type 'E'";
     }
 
     /**
@@ -39,6 +51,7 @@ public class EventTask extends Task {
      * @return The start time as LocalDateTime.
      */
     public LocalDateTime getFrom() {
+        assert from != null : "From time should not be null";
         return from;
     }
 
@@ -48,6 +61,7 @@ public class EventTask extends Task {
      * @return The end time as LocalDateTime.
      */
     public LocalDateTime getTo() {
+        assert to != null : "To time should not be null";
         return to;
     }
 
@@ -71,6 +85,11 @@ public class EventTask extends Task {
 
     @Override
     public String toString() {
-        return super.toString() + " (from: " + formatFrom() + " to: " + formatTo() + ")";
+        String result = super.toString() + " (from: " + formatFrom() + " to: " + formatTo() + ")";
+        assert result != null : "toString should not return null";
+        assert result.contains(getDescription()) : "toString should contain task description";
+        assert result.contains("from:") : "toString should contain start time indicator";
+        assert result.contains("to:") : "toString should contain end time indicator";
+        return result;
     }
 }
