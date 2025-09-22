@@ -8,7 +8,11 @@ import java.time.format.DateTimeParseException;
  * Represents a task that needs to be completed by a specific deadline.
  */
 public class DeadlineTask extends Task {
-    private LocalDateTime by;
+    private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+    private static final DateTimeFormatter OUTPUT_FORMAT = DateTimeFormatter.ofPattern("dd MMM yyyy HHmm");
+    private static final char TASK_TYPE = 'D';
+
+    private final LocalDateTime by;
 
     /**
      * Constructs a DeadlineTask with the given description and deadline.
@@ -18,7 +22,7 @@ public class DeadlineTask extends Task {
      * @throws DateTimeParseException if the date-time string is not in the correct format.
      */
     public DeadlineTask(String description, String by) throws DateTimeParseException {
-        super(description, 'D');
+        super(description, TASK_TYPE);
 
         // Assertions after super() call
         assert description != null : "Deadline description should not be null";
@@ -29,13 +33,19 @@ public class DeadlineTask extends Task {
         this.by = parseDateTime(by);
 
         assert this.by != null : "Parsed deadline should not be null";
-        assert getType() == 'D' : "DeadlineTask should have type 'D'";
+        assert getType() == TASK_TYPE : "DeadlineTask should have type 'D'";
     }
 
-    private LocalDateTime parseDateTime(String by) throws DateTimeParseException {
-        assert by != null : "Input date string should not be null";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-        LocalDateTime result = LocalDateTime.parse(by, formatter);
+    /**
+     * Parses the deadline string into a LocalDateTime object.
+     *
+     * @param dateTimeString The deadline in "yyyy-MM-dd HHmm" format.
+     * @return The parsed LocalDateTime object.
+     * @throws DateTimeParseException if the date-time string is not in the correct format.
+     */
+    private LocalDateTime parseDateTime(String dateTimeString) throws DateTimeParseException {
+        assert dateTimeString != null : "Input date string should not be null";
+        LocalDateTime result = LocalDateTime.parse(dateTimeString, INPUT_FORMAT);
         assert result != null : "Parsed LocalDateTime should not be null";
         return result;
     }
@@ -47,11 +57,20 @@ public class DeadlineTask extends Task {
      */
     public String formatBy() {
         assert by != null : "Deadline should be set before formatting";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HHmm");
-        String formatted = by.format(formatter);
+        String formatted = by.format(OUTPUT_FORMAT);
         assert formatted != null : "Formatted date should not be null";
         assert !formatted.isEmpty() : "Formatted date should not be empty";
         return formatted;
+    }
+
+    /**
+     * Gets the deadline LocalDateTime.
+     *
+     * @return The deadline LocalDateTime object.
+     */
+    public LocalDateTime getBy() {
+        assert by != null : "Deadline should not be null";
+        return by;
     }
 
     @Override

@@ -19,24 +19,79 @@ import tasks.TodoTask;
  * Singleton class to manage loading and saving tasks to a text file.
  */
 public class TasksStorage {
-    private static final Path DATA_DIRECTORY = Paths.get("data");
-    private static TasksStorage instance = null;
-    private final Path tasksFilePath = Paths.get(DATA_DIRECTORY.toString(), "Tasks.txt");
+    // File and directory constants
+    private static final String DATA_DIRECTORY_NAME = "data";
+    private static final String TASKS_FILE_NAME = "Tasks.txt";
+    private static final Path DATA_DIRECTORY = Paths.get(DATA_DIRECTORY_NAME);
 
+    // Task parsing constants
+    private static final String TASK_DELIMITER = " \\| ";
+    private static final String DONE_MARKER = "1";
+    private static final String NOT_DONE_MARKER = "0";
+    private static final int MIN_TASK_PARTS = 3;
+    private static final int MIN_DEADLINE_PARTS = 4;
+    private static final int MIN_EVENT_PARTS = 5;
+
+    // Task type constants
+    private static final char TODO_TYPE = 'T';
+    private static final char DEADLINE_TYPE = 'D';
+    private static final char EVENT_TYPE = 'E';
+
+    // Date format constants
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HHmm";
+    private static final String ISO_DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm";
+    private static final DateTimeFormatter INPUT_FORMAT = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
+    private static final DateTimeFormatter ISO_FORMAT = DateTimeFormatter.ofPattern(ISO_DATE_TIME_PATTERN);
+
+    private static TasksStorage instance = null;
+    private final Path tasksFilePath;
+
+    /**
+     * Private constructor for singleton pattern.
+     * Initializes data directory and tasks file.
+     */
     private TasksStorage() {
+        this.tasksFilePath = DATA_DIRECTORY.resolve(TASKS_FILE_NAME);
+        initializeStorage();
+    }
+
+    /**
+     * Initializes the storage directory and file structure.
+     *
+     * @throws RuntimeException if storage initialization fails
+     */
+    private void initializeStorage() {
         try {
-            if (Files.notExists(DATA_DIRECTORY)) {
-                Files.createDirectories(DATA_DIRECTORY);
-                System.out.println("Created data directory: " + DATA_DIRECTORY.toAbsolutePath());
-            }
-            if (Files.notExists(tasksFilePath)) {
-                Files.createFile(tasksFilePath);
-                System.out.println("Created tasks file: " + tasksFilePath.toAbsolutePath());
-            }
+            createDirectoryIfNotExists();
+            createFileIfNotExists();
         } catch (IOException e) {
             System.err.println("Error initializing storage: " + e.getMessage());
             System.err.println("Working directory: " + System.getProperty("user.dir"));
             throw new RuntimeException("Failed to initialize storage", e);
+        }
+    }
+
+    /**
+     * Creates the data directory if it doesn't exist.
+     *
+     * @throws IOException if directory creation fails
+     */
+    private void createDirectoryIfNotExists() throws IOException {
+        if (Files.notExists(DATA_DIRECTORY)) {
+            Files.createDirectories(DATA_DIRECTORY);
+            System.out.println("Created data directory: " + DATA_DIRECTORY.toAbsolutePath());
+        }
+    }
+
+    /**
+     * Creates the tasks file if it doesn't exist.
+     *
+     * @throws IOException if file creation fails
+     */
+    private void createFileIfNotExists() throws IOException {
+        if (Files.notExists(tasksFilePath)) {
+            Files.createFile(tasksFilePath);
+            System.out.println("Created tasks file: " + tasksFilePath.toAbsolutePath());
         }
     }
 
@@ -65,17 +120,15 @@ public class TasksStorage {
 
             List<String> lines = Files.readAllLines(tasksFilePath);
             for (String line : lines) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                try {
-                    Task task = parseTaskFromLine(line);
-                    if (task != null) {
-                        tasks.add(task);
+                if (isValidTaskLine(line)) {
+                    try {
+                        Task task = parseTaskFromLine(line);
+                        if (task != null) {
+                            tasks.add(task);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Skipping corrupted task line: " + line + " (Error: " + e.getMessage() + ")");
                     }
-                } catch (Exception e) {
-                    System.err.println("Skipping corrupted task line: " + line + " (Error: " + e.getMessage() + ")");
                 }
             }
         } catch (IOException e) {
@@ -84,62 +137,119 @@ public class TasksStorage {
         return tasks;
     }
 
+    /**
+     * Checks if a line is a valid task line.
+     *
+     * @param line the line to check
+     * @return true if the line is valid
+     */
+    private boolean isValidTaskLine(String line) {
+        return line != null && !line.trim().isEmpty();
+    }
+
+    /**
+     * Parses a task from a line of text.
+     *
+     * @param line the line to parse
+     * @return the parsed task, or null if parsing fails
+     * @throws IllegalArgumentException if the line format is invalid
+     */
     private Task parseTaskFromLine(String line) {
-        String[] parts = line.split(" \\| ");
-        if (parts.length < 3) {
+        String[] parts = line.split(TASK_DELIMITER);
+        if (parts.length < MIN_TASK_PARTS) {
             throw new IllegalArgumentException("Insufficient parts in task line");
         }
 
         char taskType = parts[0].charAt(0);
-        boolean isDone = parts[1].equals("1");
+        boolean isDone = DONE_MARKER.equals(parts[1]);
         String description = parts[2];
 
-        Task task;
-        switch (taskType) {
-        case 'T':
-            task = new TodoTask(description);
-            break;
-        case 'D':
-            if (parts.length < 4) {
-                throw new IllegalArgumentException("Deadline task missing 'by' field");
-            }
-            String by = parts[3];
-            task = new DeadlineTask(description, by);
-            break;
-        case 'E':
-            if (parts.length < 5) {
-                throw new IllegalArgumentException("Event task missing from/to fields");
-            }
-            String from = parts[3];
-            String to = parts[4];
-
-            // Handle both old format (with T) and new format (with space)
-            DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-            DateTimeFormatter isoFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-
-            LocalDateTime fromDateTime, toDateTime;
-            try {
-                fromDateTime = LocalDateTime.parse(from, inputFormat);
-                toDateTime = LocalDateTime.parse(to, inputFormat);
-            } catch (DateTimeParseException e1) {
-                try {
-                    // Try ISO format as fallback
-                    fromDateTime = LocalDateTime.parse(from, isoFormat);
-                    toDateTime = LocalDateTime.parse(to, isoFormat);
-                } catch (DateTimeParseException e2) {
-                    throw new IllegalArgumentException("Invalid date format in event task");
-                }
-            }
-            task = new EventTask(description, fromDateTime, toDateTime);
-            break;
-        default:
-            throw new IllegalArgumentException("Unknown task type: " + taskType);
-        }
+        Task task = createTaskByType(taskType, description, parts);
 
         if (isDone) {
             task.markAsDone();
         }
         return task;
+    }
+
+    /**
+     * Creates a task based on its type.
+     *
+     * @param taskType the type of task
+     * @param description the task description
+     * @param parts the parsed parts of the task line
+     * @return the created task
+     * @throws IllegalArgumentException if the task type is unknown or format is invalid
+     */
+    private Task createTaskByType(char taskType, String description, String[] parts) {
+        switch (taskType) {
+        case TODO_TYPE:
+            return new TodoTask(description);
+        case DEADLINE_TYPE:
+            return createDeadlineTask(description, parts);
+        case EVENT_TYPE:
+            return createEventTask(description, parts);
+        default:
+            throw new IllegalArgumentException("Unknown task type: " + taskType);
+        }
+    }
+
+    /**
+     * Creates a deadline task from parsed parts.
+     *
+     * @param description the task description
+     * @param parts the parsed parts
+     * @return the deadline task
+     * @throws IllegalArgumentException if the format is invalid
+     */
+    private DeadlineTask createDeadlineTask(String description, String[] parts) {
+        if (parts.length < MIN_DEADLINE_PARTS) {
+            throw new IllegalArgumentException("Deadline task missing 'by' field");
+        }
+        String by = parts[3];
+        return new DeadlineTask(description, by);
+    }
+
+    /**
+     * Creates an event task from parsed parts.
+     *
+     * @param description the task description
+     * @param parts the parsed parts
+     * @return the event task
+     * @throws IllegalArgumentException if the format is invalid
+     */
+    private EventTask createEventTask(String description, String[] parts) {
+        if (parts.length < MIN_EVENT_PARTS) {
+            throw new IllegalArgumentException("Event task missing from/to fields");
+        }
+
+        String from = parts[3];
+        String to = parts[4];
+
+        LocalDateTime fromDateTime = parseDateTime(from);
+        LocalDateTime toDateTime = parseDateTime(to);
+
+        return new EventTask(description, fromDateTime, toDateTime);
+    }
+
+    /**
+     * Parses a date-time string with fallback formats.
+     *
+     * @param dateTimeString the date-time string to parse
+     * @return the parsed LocalDateTime
+     * @throws IllegalArgumentException if parsing fails
+     */
+    private LocalDateTime parseDateTime(String dateTimeString) {
+        try {
+            return LocalDateTime.parse(dateTimeString, INPUT_FORMAT);
+        } catch (DateTimeParseException e1) {
+            try {
+                // Try ISO format as fallback
+                return LocalDateTime.parse(dateTimeString, ISO_FORMAT);
+            } catch (DateTimeParseException e2) {
+                throw new IllegalArgumentException("Invalid date format: " + dateTimeString);
+            }
+        }
     }
 
     /**
@@ -149,29 +259,67 @@ public class TasksStorage {
     public void saveTasks(List<Task> tasks) {
         List<String> lines = new ArrayList<>();
         for (Task task : tasks) {
-            StringBuilder line = new StringBuilder();
-            line.append(task instanceof TodoTask ? 'T' : task instanceof DeadlineTask ? 'D' : 'E');
-            line.append(" | ");
-            line.append(task.isDone() ? "1" : "0");
-            line.append(" | ");
-            line.append(task.getDescription());
-
-            if (task instanceof DeadlineTask) {
-                line.append(" | ").append(((DeadlineTask) task).formatBy());
-            } else if (task instanceof EventTask) {
-                EventTask eventTask = (EventTask) task;
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
-                line.append(" | ").append(eventTask.getFrom().format(formatter));
-                line.append(" | ").append(eventTask.getTo().format(formatter));
-            }
-
-            lines.add(line.toString());
+            lines.add(formatTaskForStorage(task));
         }
 
         try {
             Files.write(tasksFilePath, lines);
         } catch (IOException e) {
             System.err.println("Error saving tasks: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Formats a task for storage.
+     *
+     * @param task the task to format
+     * @return the formatted string
+     */
+    private String formatTaskForStorage(Task task) {
+        StringBuilder line = new StringBuilder();
+        line.append(getTaskTypeCharacter(task));
+        line.append(" | ");
+        line.append(task.isDone() ? DONE_MARKER : NOT_DONE_MARKER);
+        line.append(" | ");
+        line.append(task.getDescription());
+
+        appendTaskSpecificData(task, line);
+
+        return line.toString();
+    }
+
+    /**
+     * Gets the character representation of a task type.
+     *
+     * @param task the task
+     * @return the type character
+     */
+    private char getTaskTypeCharacter(Task task) {
+        if (task instanceof TodoTask) {
+            return TODO_TYPE;
+        } else if (task instanceof DeadlineTask) {
+            return DEADLINE_TYPE;
+        } else if (task instanceof EventTask) {
+            return EVENT_TYPE;
+        } else {
+            return task.getType();
+        }
+    }
+
+    /**
+     * Appends task-specific data to the storage line.
+     *
+     * @param task the task
+     * @param line the string builder to append to
+     */
+    private void appendTaskSpecificData(Task task, StringBuilder line) {
+        if (task instanceof DeadlineTask) {
+            DeadlineTask deadlineTask = (DeadlineTask) task;
+            line.append(" | ").append(deadlineTask.formatBy());
+        } else if (task instanceof EventTask) {
+            EventTask eventTask = (EventTask) task;
+            line.append(" | ").append(eventTask.getFrom().format(INPUT_FORMAT));
+            line.append(" | ").append(eventTask.getTo().format(INPUT_FORMAT));
         }
     }
 }
