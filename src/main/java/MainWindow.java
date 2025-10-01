@@ -5,6 +5,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.application.Platform;
 
 /**
  * Controller for the main GUI.
@@ -52,5 +53,19 @@ public class MainWindow extends AnchorPane {
                 DialogBox.getFengWeiDialog(response, fengWeiImage)
         );
         userInput.clear();
+
+        // Check if the user entered a bye command and close the application
+        if (fengWei.isByeCommand(input)) {
+            // Use Platform.runLater to allow the goodbye message to be displayed first
+            Platform.runLater(() -> {
+                try {
+                    Thread.sleep(1500); // Wait 1.5 seconds to let user see the goodbye message
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                Platform.exit(); // Close the JavaFX application
+                System.exit(0); // Ensure complete shutdown
+            });
+        }
     }
 }

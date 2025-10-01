@@ -180,4 +180,15 @@ public class FengWei {
         assert message != null && !message.isEmpty() : "Welcome message should not be null or empty";
         return message;
     }
+
+    /**
+     * Checks if the given input is a bye command.
+     * @param input the user's input command
+     * @return true if the input is a bye command, false otherwise
+     */
+    public boolean isByeCommand(String input) {
+        assert input != null : "Input should not be null";
+        String command = Parser.getCommand(input);
+        return isExitCommand(command);
+    }
 }
